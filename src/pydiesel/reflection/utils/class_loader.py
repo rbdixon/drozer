@@ -48,6 +48,7 @@ class ClassLoader(object):
                 file_stream.close()
             return self.construct('dalvik.system.DexClassLoader', file_path, self.cache_path, None, self.system_class_loader)
         else:
+            import pdb ; pdb.set_trace()
             raise RuntimeError("drozer could not find or compile a required extension library.\n")
 
     def __get_cached_apk_name(self):

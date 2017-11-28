@@ -132,6 +132,51 @@ class Provider(loader.ClassLoader):
                 else:
                     raise Provider.UnableToOpenFileException(uri)
 
+        def write(self, uri, filename):
+            """
+            Write a file from a file-system-based content provider.
+            """
+            
+            # Open the input stream
+            ByteStreamReader = self.__module.loadClass("common/ByteStreamReader.apk", "ByteStreamReader")
+            in_stream = self.__module.new("java.io.FileInputStream", filename)
+            payload = ByteStreamReader.read(in_stream)
+            in_stream.close()
+            
+            client = self.__get_client(uri)
+
+            if self.__must_release_client:
+                fd = None
+   
+                if client != None:
+                    try:
+                        fd = client.openFile(self.parseUri(uri), "w")
+                    except ReflectionException as e:
+                        if e.message.startswith("Unknown Exception"):
+                            raise ReflectionException("Could not write to %s." % uri)
+                        else:
+                            raise
+    
+                self.__release(client)
+    
+                if fd != None:
+                    # return str(ByteStreamReader.read(self.__module.new("java.io.FileInputStream", fd.getFileDescriptor())))
+                    out_stream = self.__module.new("java.io.FileOutputStream", fd.getFileDescriptor())
+                    out_stream.write(payload)
+                    out_stream.close()
+                    fd.close()
+                else:
+                    raise Provider.UnableToOpenFileException(uri)
+            else:
+                raise NotImplemented()
+                input_stream = self.__content_resolver.openInputStream(self.parseUri(uri))
+                
+                if input_stream != None:
+                    # return str(ByteStreamReader.read(input_stream))
+                    pass
+                else:
+                    raise Provider.UnableToOpenFileException(uri)
+
         def update(self, uri, contentValues, selection, selectionArgs):
             """
             Update records in a content provider with contentValues.
